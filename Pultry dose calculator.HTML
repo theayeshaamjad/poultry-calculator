@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dr Usman Ali - Poultry Medicine Dose Calculator</title>
+<style>
+/* === Base styles (unchanged) === */
+body{
+  margin:0;padding:0;
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(135deg,#f5f9ff,#e0f7fa);
+  display:flex;justify-content:center;align-items:flex-start;
+  min-height:100vh;
+}
+.container{
+  max-width:650px;background:#fff;padding:30px 40px;margin-top:40px;
+  border-radius:15px;box-shadow:0 15px 35px rgba(0,0,0,0.1);
+}
+h1{
+  text-align:center;font-size:2.4em;margin:0;
+  background:linear-gradient(90deg,#2e7d32,#0288d1);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:1px 1px 2px rgba(0,0,0,0.18);
+  letter-spacing:1px;
+}
+.heading-underline{
+  width:220px;height:8px;margin:10px auto 18px;
+  border-radius:6px;
+  background: linear-gradient(90deg,#ffd54f,#ffb300);
+  box-shadow: 0 4px 12px rgba(255,181,0,0.12),
+              inset 0 -2px 6px rgba(0,0,0,0.06);
+}
+h3{
+  text-align:center;margin:0 0 18px 0;
+  font-weight:700;font-style:italic;
+  background:#fff7cc;display:inline-block;
+  padding:6px 12px;border-radius:8px;
+  color:#2e7d32;
+  box-shadow:0 3px 8px rgba(46,125,50,0.06);
+}
+.form-group{margin-bottom:18px;}
+label{font-weight:600;display:block;margin-bottom:6px;color:#333;}
+input,select{
+  width:100%;padding:10px;font-size:16px;
+  border:1px solid #ccc;border-radius:6px;
+}
+button{
+  width:100%;padding:12px;margin-top:10px;
+  font-size:16px;background:#2e7d32;color:white;
+  border:none;border-radius:6px;cursor:pointer;
+}
+button:hover{background:#1b5e20;}
+.btn-group{display:flex;gap:10px;margin-top:15px;}
+.btn-group button{flex:1;background:#0288d1;}
+.btn-group button:hover{background:#01579b;}
+.btn-reset{background:#e53935;}
+.btn-reset:hover{background:#b71c1c;}
+.result{
+  margin-top:25px;font-size:16px;
+  background:#f1f8e9;padding:20px;
+  border-left:4px solid #2e7d32;
+  border-radius:8px;line-height:1.5;
+  overflow-x:auto;
+}
+.toggle-group{display:flex;gap:10px;margin-top:8px;}
+.toggle-group input[type="radio"]{display:none;}
+.toggle-group label{
+  flex:1;text-align:center;padding:8px 0;
+  border:1px solid #ccc;border-radius:6px;
+  cursor:pointer;background:#f5f5f5;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.toggle-group input[type="radio"]:checked + label{
+  background:#2e7d32;color:#fff;border-color:#2e7d32;
+}
+.modal{
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.4);justify-content:center;align-items:center;
+}
+.modal-content{
+  background:#fff;padding:20px 25px;border-radius:12px;
+  width:90%;max-width:420px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+.close-btn{float:right;font-size:20px;cursor:pointer;color:#555;}
+.close-btn:hover{color:#000;}
+
+/* === Print view: Excel-like sheet with same-row values === */
+/* === Professional Excel-like print view === */
+@media print {
+  body * { visibility: hidden; }
+  #printTable, #printTable * {
+    visibility: visible;
+    display: block !important;
+  }
+  #printTable {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    padding: 20px;
+    font-family: 'Segoe UI', sans-serif;
+    background: #fff;
+    font-size: 14px;
+  }
+  #printTable table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+  }
+  /* Two columns: Parameter | Value */
+  #printTable th, #printTable td {
+    border: 1px solid #444;
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: middle;
+  }
+  #printTable th {
+    background: #2e7d32;
+    color: #fff;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  /* Highlight the result row(s) */
+  #printTable td.resultCell {
+    background: #ffe082;
+    font-weight: 700;
+  }
+}
+
+@media (max-width:600px){
+  .container{padding:20px;}
+  .heading-underline{width:160px;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Dr Usman Ali</h1>
+  <div class="heading-underline"></div>
+  <h3>POULTRY MEDICINE DOSE CALCULATOR</h3>
+
+  <div class="form-group">
+    <label for="medicineName">Medicine Name</label>
+    <input id="medicineName" type="text" placeholder="e.g. Tylosin" oninput="this.value=this.value.toUpperCase()">
+  </div>
+
+  <div class="form-group">
+    <label for="medicineType">Medicine Type</label>
+    <select id="medicineType" onchange="updateCompOptions()">
+      <option value="liquid">Liquid (ml)</option>
+      <option value="powder">Powder (g)</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Composition Input Type</label>
+    <div class="toggle-group">
+      <input type="radio" id="percentRadio" name="compType" value="percent" checked onchange="updateCompLabel()">
+      <label for="percentRadio">Percentage (%)</label>
+      <input type="radio" id="weightRadio" name="compType" value="weight" onchange="updateCompLabel()">
+      <label for="weightRadio" id="weightLabel">g/L</label>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label id="compositionLabel" for="composition">Composition (%)</label>
+    <input id="composition" type="number" placeholder="e.g. 10">
+  </div>
+
+  <div class="form-group">
+    <label for="flockWeight">Flock Weight (kg)</label>
+    <input id="flockWeight" type="number" placeholder="e.g. 500" />
+    <button style="margin-top:8px;background:#0288d1;" onclick="openModal()">Calculate Body Weight</button>
+  </div>
+
+  <div class="form-group">
+    <label for="dose">Dose Required (mg/kg)</label>
+    <input id="dose" type="number" placeholder="e.g. 20" />
+  </div>
+
+  <div class="form-group">
+    <label for="duration">Duration (days)</label>
+    <input id="duration" type="number" placeholder="e.g. 5" />
+  </div>
+
+  <button onclick="calculateDose()">Calculate</button>
+
+  <div class="btn-group">
+    <button onclick="window.print()">🖨 Print</button>
+    <button class="btn-reset" onclick="resetAll()">🔄 Reset</button>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<div id="printTable" style="display:none;"></div>
+
+<!-- Body weight modal -->
+<div class="modal" id="weightModal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal()">&times;</span>
+    <h3>Body Weight Calculator</h3>
+    <div class="form-group"><label>Total Number of Females</label><input id="numFemales" type="number"></div>
+    <div class="form-group"><label>Average Female Body Weight (g)</label><input id="avgFemaleWeight" type="number"></div>
+    <div class="form-group"><label>Total Number of Males</label><input id="numMales" type="number"></div>
+    <div class="form-group"><label>Average Male Body Weight (g)</label><input id="avgMaleWeight" type="number"></div>
+    <button onclick="calcBodyWeight()">Calculate Total Flock Weight</button>
+    <div class="result" id="bodyWeightResult" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+<script>
+let bodyWeightData = null;
+
+function updateCompOptions(){
+  const medType=document.getElementById('medicineType').value;
+  document.getElementById('weightLabel').textContent = medType==='liquid' ? 'g/L' : 'g/kg';
+  updateCompLabel();
+}
+function updateCompLabel(){
+  const selected=document.querySelector('input[name="compType"]:checked').value;
+  const medType=document.getElementById('medicineType').value;
+  const label=document.getElementById('compositionLabel');
+  const compInput=document.getElementById('composition');
+  if(selected==='percent'){
+    label.textContent='Composition (%)';
+    compInput.max=100;
+    compInput.oninput=function(){
+      if(this.value==='') return;
+      let v=parseFloat(this.value);
+      if(!isNaN(v) && v>100) this.value=100;
+      if(!isNaN(v) && v<0) this.value=0;
+    };
+  } else {
+    label.textContent = medType==='liquid' ? 'Concentration (g/L)' : 'Concentration (g/kg)';
+    compInput.removeAttribute('max'); compInput.oninput=null;
+  }
+}
+function openModal(){document.getElementById('weightModal').style.display='flex';}
+function closeModal(){document.getElementById('weightModal').style.display='none';}
+
+function calcBodyWeight(){
+  const nf=parseFloat(document.getElementById('numFemales').value)||0;
+  const af=parseFloat(document.getElementById('avgFemaleWeight').value)||0;
+  const nm=parseFloat(document.getElementById('numMales').value)||0;
+  const am=parseFloat(document.getElementById('avgMaleWeight').value)||0;
+  const totalKg=((nf*af)+(nm*am))/1000;
+  if(totalKg>0){
+    const confirmMsg = `Total Flock Weight is ${totalKg.toFixed(2)} kg.\nIs this correct?`;
+    if(confirm(confirmMsg)){
+      bodyWeightData={numFemales:nf,avgFemale:af,numMales:nm,avgMale:am,totalKg:totalKg};
+      document.getElementById('flockWeight').value=totalKg.toFixed(2);
+      document.getElementById('bodyWeightResult').innerHTML=
+        `<strong>Total Flock Weight:</strong> ${totalKg.toFixed(2)} kg (confirmed)`;
+      closeModal();
+    } else {
+      document.getElementById('bodyWeightResult').innerHTML=
+        `<strong>Total Flock Weight:</strong> ${totalKg.toFixed(2)} kg (edit values if incorrect)`;
+    }
+  } else {
+    document.getElementById('bodyWeightResult').innerHTML='⚠ Enter valid values.';
+  }
+}
+
+function calculateDose(){
+  const name=document.getElementById('medicineName').value.trim();
+  const type=document.getElementById('medicineType').value;
+  const compType=document.querySelector('input[name="compType"]:checked').value;
+  const composition=parseFloat(document.getElementById('composition').value);
+  const weight=parseFloat(document.getElementById('flockWeight').value);
+  const dosePerKg=parseFloat(document.getElementById('dose').value);
+  const duration=parseFloat(document.getElementById('duration').value);
+  const resultDiv=document.getElementById('result');
+  if(!name||isNaN(composition)||isNaN(weight)||isNaN(dosePerKg)||isNaN(duration)){
+    resultDiv.innerHTML='⚠ Please enter all fields correctly.';return;
+  }
+  if(composition<=0||weight<=0||dosePerKg<=0||duration<=0){
+    resultDiv.innerHTML='⚠ Values must be greater than zero.';return;
+  }
+  if(compType==='percent' && composition>100){
+    resultDiv.innerHTML='⚠ Percentage cannot exceed 100%.';return;
+  }
+  let mgPerUnit = compType==='percent' ? composition*10 : composition;
+  const totalMgPerDay=weight*dosePerKg;
+  const dailyDoseUnits=totalMgPerDay/mgPerUnit;
+  const totalDoseUnits=dailyDoseUnits*duration;
+  const unitLabel=type==='liquid'?'ml':'g';
+  const compLabel=compType==='percent'?'%':(type==='liquid'?'g/L':'g/kg');
+
+  let bwRows='';
+  if(bodyWeightData && bodyWeightData.totalKg>0){
+    bwRows+=`
+      <tr><td>Total Females</td><td>${bodyWeightData.numFemales}</td></tr>
+      <tr><td>Avg Female Wt (g)</td><td>${bodyWeightData.avgFemale}</td></tr>
+      <tr><td>Total Males</td><td>${bodyWeightData.numMales}</td></tr>
+      <tr><td>Avg Male Wt (g)</td><td>${bodyWeightData.avgMale}</td></tr>
+      <tr><td>Total Flock Wt (kg)</td><td class="resultCell">${bodyWeightData.totalKg.toFixed(2)}</td></tr>`;
+  }
+
+  const tableHtml = `
+    <table>
+      <tr><th>Parameter</th><th>Value</th></tr>
+      <tr><td>Medicine</td><td>${escapeHtml(name)}</td></tr>
+      <tr><td>Type</td><td>${type==='liquid'?'Liquid (ml)':'Powder (g)'}</td></tr>
+      <tr><td>Composition</td><td>${composition} ${compLabel}</td></tr>
+      <tr><td>Flock Weight (kg)</td><td>${weight}</td></tr>
+      ${bwRows}
+      <tr><td>Dose Required (mg/kg)</td><td>${dosePerKg}</td></tr>
+      <tr><td>Duration (days)</td><td>${duration}</td></tr>
+      <tr><td class="resultCell">Daily Dose</td><td class="resultCell">${dailyDoseUnits.toFixed(2)} ${unitLabel}</td></tr>
+      <tr><td class="resultCell">Total Course Dose</td><td class="resultCell">${totalDoseUnits.toFixed(2)} ${unitLabel}</td></tr>
+    </table>`;
+
+  resultDiv.innerHTML = tableHtml;
+  document.getElementById('printTable').innerHTML = tableHtml;
+}
+
+function resetAll(){
+  ['medicineName','composition','flockWeight','dose','duration',
+   'numFemales','avgFemaleWeight','numMales','avgMaleWeight']
+   .forEach(id=>document.getElementById(id).value='');
+  document.getElementById('result').innerHTML='';
+  document.getElementById('printTable').innerHTML='';
+  bodyWeightData=null;
+  document.getElementById('percentRadio').checked=true;
+  updateCompOptions();
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+updateCompOptions();
+</script>
+</body>
+</html>

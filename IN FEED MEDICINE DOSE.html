@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Dr Usman Ali - Poultry In-Feed Medicine Dose Calculator</title>
+<style>
+  body{margin:0;padding:18px;font-family:'Segoe UI',Tahoma,Helvetica,Arial,sans-serif;background:linear-gradient(135deg,#f5f9ff,#e0f7fa);}
+  .container{max-width:1100px;margin:18px auto;background:#fff;border-radius:12px;padding:22px 26px;box-shadow:0 14px 30px rgba(0,0,0,0.08);}
+  h1{margin:0;text-align:center;font-size:2.4rem;
+      background:linear-gradient(90deg,#2e7d32,#0288d1);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      text-shadow:1px 1px 2px rgba(0,0,0,0.12);letter-spacing:1px;}
+  .heading-underline{width:220px;height:8px;margin:8px auto 18px;border-radius:6px;
+    background:linear-gradient(90deg,#ffd54f,#ffb300);box-shadow:0 6px 16px rgba(0,0,0,0.06);}
+  h3.sub{ display:flex; justify-content:center; text-align:center; margin:0 auto 18px;
+          padding:8px 14px; font-style:italic; font-weight:700; color:#2e7d32;
+          background:#fff7cc; border-radius:8px; box-shadow:0 3px 8px rgba(46,125,50,0.06); }
+
+  .row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;}
+  .col{flex:1;min-width:140px;}
+  .col.flockNoCol input{max-width:120px;}
+
+  label{display:block;font-weight:600;margin-bottom:6px;color:#333;}
+  input[type="text"], input[type="number"], select { width:100%; padding:10px;border:1px solid #cfcfcf;border-radius:8px;font-size:15px; box-sizing:border-box;}
+  input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+  input[type="number"]{ -moz-appearance:textfield; }
+
+  .med-table, .results-table { width:100%; border-collapse:collapse; margin-top:10px; }
+  .med-table th, .med-table td, .results-table th, .results-table td { border:1px solid #ddd; padding:8px; text-align:center; vertical-align:middle; }
+  .med-table th, .results-table th { background:#f4f6f7; font-weight:700; }
+  .med-actions button{ background:#e53935; color:#fff; border:none; padding:6px 8px; border-radius:6px; cursor:pointer;}
+  .btn { background:#2e7d32;color:#fff;border:none;padding:9px 14px;border-radius:8px;cursor:pointer;font-weight:700;}
+  .btn.secondary{ background:#0288d1;}
+  .btn.warning{ background:#f57c00;}
+  .small{ font-size:13px; color:#555; margin-top:6px; }
+  .live{ background:#f1f8e9; padding:14px; border-left:4px solid #2e7d32; border-radius:8px; margin-top:12px; }
+  .tiny { width:90px; padding:8px; border-radius:6px; }
+
+  @media (max-width:900px){ .row { flex-direction:column; } .col{min-width:100%} }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Dr Usman Ali</h1>
+  <div class="heading-underline"></div>
+  <h3 class="sub">POULTRY IN-FEED MEDICINE DOSE CALCULATOR</h3>
+
+  <!-- Medicines section -->
+  <section id="medSection" style="margin-top:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h4 style="margin:0">Medicines</h4>
+      <div>
+        <button class="btn secondary" onclick="addMedicine()">+ Add Medicine</button>
+      </div>
+    </div>
+
+    <table class="med-table" id="medTable" aria-label="medicines">
+      <thead>
+        <tr>
+          <th style="width:380px">Medicine Name</th>
+          <th>Type</th>
+          <th style="width:280px">Dose - Female (mg/kg)</th>
+          <th style="width:280px">Dose - Male (mg/kg)</th>
+          <th style="width:80px">Remove</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- Flock details -->
+  <section style="margin-top:18px;">
+    <h4 style="margin:0 0 8px 0">Flock Details</h4>
+    <div class="row">
+      <div class="col flockNoCol">
+        <label>Flock No.</label>
+        <input id="flockNo" type="text" placeholder="e.g. 1">
+      </div>
+      <div class="col">
+        <label>No. of Females</label>
+        <input id="numFemales" type="number" min="0" placeholder="e.g. 10,000">
+      </div>
+      <div class="col">
+        <label>Avg Female Body Wt (g)</label>
+        <input id="avgFemaleWt" type="number" min="0" placeholder="e.g. 1,500">
+      </div>
+      <div class="col">
+        <label>No. of Males</label>
+        <input id="numMales" type="number" min="0" placeholder="e.g. 1,000">
+      </div>
+      <div class="col">
+        <label>Avg Male Body Wt (g)</label>
+        <input id="avgMaleWt" type="number" min="0" placeholder="e.g. 1,500">
+      </div>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;">
+      <div>
+        <label>Course Duration (days)</label>
+        <select id="courseDays" class="tiny"></select>
+      </div>
+      <div>
+        <label>Avg Female Feed (g/day)</label>
+        <input id="feedFemale" type="number" min="0" class="tiny" placeholder="e.g. 165">
+      </div>
+      <div>
+        <label>Avg Male Feed (g/day)</label>
+        <input id="feedMale" type="number" min="0" class="tiny" placeholder="e.g. 120">
+      </div>
+    </div>
+  </section>
+
+  <section id="liveResults" class="live">
+    <h4 style="margin:0 0 8px 0">Live Results</h4>
+    <div id="medResultsWrap"></div>
+    <div style="margin-top:12px;">
+      <strong>Total Daily Feed Intake:</strong>
+      <div id="feedTotals" style="margin-top:6px;">0 kg (0 bags)</div>
+      <div id="feedFemaleTotal" style="margin-top:4px;">Female Feed: 0 kg</div>
+      <div id="feedMaleTotal" style="margin-top:4px;">Male Feed: 0 kg</div>
+
+      <div style="margin-top:6px;"><strong>Total Feed for Course:</strong>
+        <span id="feedCourseTotals">0 kg (0 bags)</span>
+      </div>
+      <div id="feedFemaleCourse" style="margin-top:4px;">Female Course Feed: 0 kg</div>
+      <div id="feedMaleCourse" style="margin-top:4px;">Male Course Feed: 0 kg</div>
+    </div>
+  </section>
+
+  <div style="margin-top:14px;">
+    <button class="btn" onclick="downloadReport()">Download Report (CSV)</button>
+    <button class="btn secondary" onclick="window.print()">Print</button>
+  </div>
+
+  <div class="small" style="margin-top:14px;">
+    Note: 1 bag = 50 kg. Live values update as you change medicines, doses, weights or feed inputs.
+  </div>
+</div>
+
+<script>
+function el(tag, attrs={}){ const e=document.createElement(tag); for(const k in attrs) e[k]=attrs[k]; return e; }
+function number(v){ v=parseFloat(v); return isNaN(v)?0:v; }
+function round5(x){ return Math.round(x/5)*5; }
+
+/* course days */
+const courseSelect = document.getElementById('courseDays');
+for(let d=1; d<=30; d++){ let opt=el('option'); opt.value=d; opt.textContent=d; courseSelect.appendChild(opt); }
+courseSelect.value = 1;
+
+/* med table */
+const medTbody = document.querySelector('#medTable tbody');
+let medIdCounter = 0;
+
+/* add medicine row */
+function addMedicine(m){
+  medIdCounter++;
+  const id = 'med_' + medIdCounter;
+  const tr = el('tr'); tr.dataset.id = id;
+
+  tr.innerHTML = `
+    <td><input type="text" class="medName" placeholder="NAME"></td>
+    <td>
+      <select class="medType tiny">
+        <option value="liquid">Liquid (ml)</option>
+        <option value="powder" selected>Powder (g)</option>
+      </select>
+    </td>
+    <td><input type="number" class="doseF tiny" step="any" min="0" placeholder="mg/kg"></td>
+    <td><input type="number" class="doseM tiny" step="any" min="0" placeholder="mg/kg"></td>
+    <td class="med-actions"><button type="button">X</button></td>
+  `;
+  medTbody.appendChild(tr);
+
+  const medNameInput = tr.querySelector('.medName');
+  const medTypeSel = tr.querySelector('.medType');
+  const doseF = tr.querySelector('.doseF');
+  const doseM = tr.querySelector('.doseM');
+  const removeBtn = tr.querySelector('.med-actions button');
+
+  medNameInput.addEventListener('input', ()=> medNameInput.value = medNameInput.value.toUpperCase());
+  [medTypeSel, doseF, doseM, medNameInput].forEach(node=>{
+    node.addEventListener('input', recalcAll);
+    node.addEventListener('change', recalcAll);
+  });
+  removeBtn.addEventListener('click', ()=>{ tr.remove(); recalcAll(); });
+
+  if(m){
+    medNameInput.value = (m.name||'').toUpperCase();
+    medTypeSel.value = m.type || 'powder';
+    doseF.value = m.doseF || '';
+    doseM.value = m.doseM || '';
+  }
+
+  recalcAll();
+}
+
+/* Attach flock input listeners */
+['numFemales','avgFemaleWt','numMales','avgMaleWt','feedFemale','feedMale','courseDays','flockNo'].forEach(id=>{
+  const node=document.getElementById(id);
+  if(node) node.addEventListener('input', recalcAll);
+});
+
+/* main calculation */
+function recalcAll(){
+  const nF = number(document.getElementById('numFemales').value);
+  const nM = number(document.getElementById('numMales').value);
+  const avgF = number(document.getElementById('avgFemaleWt').value);
+  const avgM = number(document.getElementById('avgMaleWt').value);
+  const feedF = number(document.getElementById('feedFemale').value);
+  const feedM = number(document.getElementById('feedMale').value);
+  const days = number(document.getElementById('courseDays').value) || 1;
+
+  const totalDailyFeedG = (feedF * nF) + (feedM * nM);
+  const totalDailyFeedKgRounded = round5(totalDailyFeedG / 1000);
+  const totalDailyBags = (totalDailyFeedKgRounded / 50).toFixed(2);
+
+  const totalCourseFeedKgRounded = round5(totalDailyFeedKgRounded * days);
+  const totalCourseBags = (totalCourseFeedKgRounded / 50).toFixed(2);
+
+  // new female/male feed calculations
+  const femaleDailyKg = round5((feedF * nF) / 1000);
+  const maleDailyKg   = round5((feedM * nM) / 1000);
+  const femaleCourseKg = round5(femaleDailyKg * days);
+  const maleCourseKg   = round5(maleDailyKg * days);
+
+  const medResultsWrap = document.getElementById('medResultsWrap');
+  medResultsWrap.innerHTML = '';
+
+  [...medTbody.querySelectorAll('tr')].forEach((r, idx)=>{
+    const name = r.querySelector('.medName').value.trim() || `MED ${idx+1}`;
+    const type = r.querySelector('.medType').value;
+    const doseF = number(r.querySelector('.doseF').value);
+    const doseM = number(r.querySelector('.doseM').value);
+
+    const femaleTotalKg = (nF * avgF) / 1000;
+    const maleTotalKg   = (nM * avgM) / 1000;
+
+    const femaleMgPerDay = doseF * femaleTotalKg;
+    const maleMgPerDay   = doseM * maleTotalKg;
+
+    const femaleGPerDay = (femaleMgPerDay / 1000).toFixed(2);
+    const maleGPerDay   = (maleMgPerDay / 1000).toFixed(2);
+    const totalGPerDay  = (parseFloat(femaleGPerDay) + parseFloat(maleGPerDay)).toFixed(2);
+
+    const femaleGCourse = (parseFloat(femaleGPerDay) * days).toFixed(2);
+    const maleGCourse   = (parseFloat(maleGPerDay) * days).toFixed(2);
+    const totalGCourse  = (parseFloat(femaleGCourse) + parseFloat(maleGCourse)).toFixed(2);
+
+    const gramsPerTonFemale = feedF > 0 ? round5((avgF * doseF) / feedF) : 0;
+    const gramsPerTonMale   = feedM > 0 ? round5((avgM * doseM) / feedM) : 0;
+
+    const tbl = el('table'); tbl.className = 'results-table';
+    tbl.innerHTML = `<thead><tr>
+        <th colspan="4" style="text-align:left">${name} — (${type}) <br><small>Female @${doseF} mg/kg, Male @${doseM} mg/kg</small></th>
+      </tr>
+      <tr>
+        <th>Sex</th><th># Birds</th><th>Daily (g)</th><th>Course (g)</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Female</td><td>${nF}</td><td>${femaleGPerDay}</td><td>${femaleGCourse}</td></tr>
+        <tr><td>Male</td><td>${nM}</td><td>${maleGPerDay}</td><td>${maleGCourse}</td></tr>
+        <tr style="font-weight:700;background:#f7fff7;"><td>Total</td><td>${nF+nM}</td>
+          <td>${totalGPerDay}</td><td>${totalGCourse}</td></tr>
+      </tbody>`;
+
+    const mixTbl = el('table'); mixTbl.className = 'results-table';
+    mixTbl.style.marginTop = '8px';
+    mixTbl.innerHTML = `<thead><tr>
+        <th>Feed Mixing (grams per TON of feed)</th><th>Female</th><th>Male</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>g/ton</td><td>${gramsPerTonFemale}</td><td>${gramsPerTonMale}</td></tr>
+      </tbody>`;
+
+    const block = el('div'); block.style.marginTop = '12px';
+    block.appendChild(tbl); block.appendChild(mixTbl);
+    medResultsWrap.appendChild(block);
+  });
+
+  document.getElementById('feedTotals').textContent =
+      `${totalDailyFeedKgRounded} kg (${totalDailyBags} bags)`;
+  document.getElementById('feedCourseTotals').textContent =
+      `${totalCourseFeedKgRounded} kg (${totalCourseBags} bags)`;
+
+  document.getElementById('feedFemaleTotal').textContent =
+      `Female Feed: ${femaleDailyKg} kg`;
+  document.getElementById('feedMaleTotal').textContent =
+      `Male Feed: ${maleDailyKg} kg`;
+  document.getElementById('feedFemaleCourse').textContent =
+      `Female Course Feed: ${femaleCourseKg} kg`;
+  document.getElementById('feedMaleCourse').textContent =
+      `Male Course Feed: ${maleCourseKg} kg`;
+}
+
+/* CSV download (composition removed) */
+function downloadReport(){
+  let csv = [];
+  csv.push(['Poultry In-Feed Medicine Dose Report']);
+  csv.push([]);
+  csv.push(['Flock No', document.getElementById('flockNo').value || '']);
+  csv.push(['# Females', document.getElementById('numFemales').value || 0, 'Avg Female Wt (g)', document.getElementById('avgFemaleWt').value || 0]);
+  csv.push(['# Males', document.getElementById('numMales').value || 0, 'Avg Male Wt (g)', document.getElementById('avgMaleWt').value || 0]);
+  csv.push(['Course Days', document.getElementById('courseDays').value || 1]);
+  csv.push([]);
+  csv.push(['Medicine','Type','DoseFemale(mg/kg)','DoseMale(mg/kg)']);
+
+  [...medTbody.querySelectorAll('tr')].forEach(r=>{
+    const name = r.querySelector('.medName').value;
+    const type = r.querySelector('.medType').value;
+    const doseF = r.querySelector('.doseF').value;
+    const doseM = r.querySelector('.doseM').value;
+    csv.push([name,type,doseF,doseM]);
+  });
+
+  const blob = new Blob([csv.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'poultry_dose_report.csv';
+  a.click();
+}
+
+addMedicine(); // start with one row
+</script>
+</body>
+</html>
